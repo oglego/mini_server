@@ -32,7 +32,4 @@ Thumbs.db
 # Logs
 *.log
 
-# Images and generated files
-imgs/
-
-# Ignore node_modules if
+.gitignore
