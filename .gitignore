@@ -1,0 +1,38 @@
+# Go build artifacts
+/app/app
+/app/*.exe
+/app/*.out
+
+# Go module cache
+/go/pkg/
+go.sum
+
+# Docker artifacts
+*.tar
+*.log
+
+# Python virtual environments
+venv/
+__pycache__/
+*.pyc
+
+# Ansible artifacts
+*.retry
+
+# Kubernetes configs
+*.kubeconfig
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Images and generated files
+imgs/
+
+# Ignore node_modules if

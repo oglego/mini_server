@@ -1,0 +1,53 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    ansible_python_interpreter: venv/bin/python3
+  tasks:
+
+    - name: Build Docker image
+      community.docker.docker_image:
+        name: status-api
+        tag: "1.0"
+        build:
+          path: ./app
+          dockerfile: dockerfile
+        source: build
+
+    - name: Apply Kubernetes Deployment
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('file', '../k8s/deployment.yaml') }}"
+        namespace: default
+
+    - name: Apply Kubernetes Service
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('file', '../k8s/service.yaml') }}"
+        namespace: default
+
+    # Smoke Tests
+    - name: Wait for pods to be ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Pod
+        namespace: default
+      register: pod_list
+      until: >
+        pod_list.resources | selectattr('status.containerStatuses', 'defined')
+        | map(attribute='status.containerStatuses')
+        | map('map', attribute='ready')
+        | map('min')
+        | min
+      retries: 10
+      delay: 5
+
+    - name: Get NodePort
+      command: kubectl get svc status-api -o jsonpath='{.spec.ports[0].nodePort}'
+      register: nodeport
+      changed_when: false
+
+    - name: Smoke test /health endpoint
+      uri:
+        url: "http://localhost:{{ nodeport.stdout }}/health"
+        status_code: 200
